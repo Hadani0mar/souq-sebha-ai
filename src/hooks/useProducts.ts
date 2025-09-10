@@ -65,7 +65,7 @@ export const useProducts = () => {
       const { data, error } = await supabase
         .from('المتاجر')
         .select('*')
-        .eq('مفعّل', true)
+        .eq('مفعّل', true)  // Use Arabic character
         .limit(20);
       
       if (error) throw error;

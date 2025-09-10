@@ -27,17 +27,20 @@ export const useWebhook = () => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      
-      // Handle different response formats
-      if (typeof data === 'string') {
-        return data;
-      } else if (data.response) {
-        return data.response;
-      } else if (data.message) {
-        return data.message;
-      } else {
+      const raw = await response.text();
+      if (!raw) return "تم بدء المعالجة ✅";
+
+      try {
+        const data = JSON.parse(raw);
+        // Handle different response formats
+        if (typeof data === 'string') return data;
+        if (data.response) return data.response;
+        if (data.message) return data.message;
+        if (data.results) return typeof data.results === 'string' ? data.results : JSON.stringify(data.results, null, 2);
         return JSON.stringify(data, null, 2);
+      } catch {
+        // If it's plain text, just return it
+        return raw;
       }
       
     } catch (err) {
@@ -73,14 +76,18 @@ export const useWebhook = () => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const data = await response.json();
-      
-      if (typeof data === 'string') {
-        return data;
-      } else if (data.results) {
-        return data.results;
-      } else {
+      const raw = await response.text();
+      if (!raw) return "تم بدء البحث ✅";
+
+      try {
+        const data = JSON.parse(raw);
+        if (typeof data === 'string') return data;
+        if (data.results) return typeof data.results === 'string' ? data.results : JSON.stringify(data.results, null, 2);
+        if (data.message) return data.message;
         return `تم العثور على النتائج التالية:\n${JSON.stringify(data, null, 2)}`;
+      } catch {
+        // If it's plain text, just return it
+        return raw;
       }
       
     } catch (err) {
