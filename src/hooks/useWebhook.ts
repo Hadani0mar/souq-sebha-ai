@@ -28,15 +28,26 @@ export const useWebhook = () => {
       }
 
       const raw = await response.text();
+      console.log('Webhook response:', raw); // Debug log
+      
       if (!raw) return "تم بدء المعالجة ✅";
+
+      // First try to return as-is if it looks like a proper response
+      if (raw && !raw.startsWith('{') && !raw.startsWith('[')) {
+        return raw;
+      }
 
       try {
         const data = JSON.parse(raw);
+        console.log('Parsed webhook data:', data); // Debug log
+        
         // Handle different response formats
         if (typeof data === 'string') return data;
         if (data.response) return data.response;
         if (data.message) return data.message;
         if (data.results) return typeof data.results === 'string' ? data.results : JSON.stringify(data.results, null, 2);
+        
+        // If it's an object/array, format it nicely
         return JSON.stringify(data, null, 2);
       } catch {
         // If it's plain text, just return it

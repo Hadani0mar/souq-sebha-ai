@@ -27,7 +27,7 @@ const SearchBar = ({ onSearch, isLoading = false }: SearchBarProps) => {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="ابحث عن منتج، متجر، أو كلمة مفتاحية..."
-            className="pl-12 pr-4 py-3 text-lg arabic-text text-right"
+            className="pl-12 pr-4 py-3 text-lg arabic-text text-right text-foreground placeholder:text-muted-foreground bg-background border-input"
             disabled={isLoading}
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />

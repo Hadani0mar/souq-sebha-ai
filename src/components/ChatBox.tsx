@@ -53,9 +53,30 @@ const ChatBox = ({ onSendMessage }: ChatBoxProps) => {
     try {
       const response = await onSendMessage(currentMessage);
       
+      // Handle the response properly - it might be text or JSON string
+      let responseContent = response;
+      if (typeof response === 'string') {
+        try {
+          // Try to parse if it's JSON string
+          const parsed = JSON.parse(response);
+          if (parsed.message) {
+            responseContent = parsed.message;
+          } else if (parsed.response) {
+            responseContent = parsed.response;
+          } else if (typeof parsed === 'string') {
+            responseContent = parsed;
+          } else {
+            responseContent = JSON.stringify(parsed, null, 2);
+          }
+        } catch {
+          // If it's not JSON, use as is
+          responseContent = response;
+        }
+      }
+      
       const botMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content: response,
+        content: responseContent,
         isBot: true,
         timestamp: new Date()
       };
@@ -144,7 +165,7 @@ const ChatBox = ({ onSendMessage }: ChatBoxProps) => {
               value={currentMessage}
               onChange={(e) => setCurrentMessage(e.target.value)}
               placeholder="اكتب رسالتك هنا..."
-              className="arabic-text text-right"
+              className="arabic-text text-right text-foreground placeholder:text-muted-foreground bg-background border-input"
               disabled={isLoading}
             />
             <Button 

@@ -62,15 +62,33 @@ export const useProducts = () => {
     setError(null);
     
     try {
+      // Get unique stores from products view - use * and filter manually
       const { data, error } = await supabase
-        .from('المتاجر')
+        .from('عرض_المنتجات')
         .select('*')
-        .eq('مفعّل', true)  // Use Arabic character
-        .limit(20);
+        .not('معرف_المتجر', 'is', null)
+        .limit(50);
       
       if (error) throw error;
       
-      setStores(data || []);
+      // Remove duplicates and transform to Store format
+      const uniqueStores = data?.reduce((acc: Store[], item: any) => {
+        const exists = acc.find(store => store.المعرف === item.معرف_المتجر);
+        if (!exists && item.معرف_المتجر) {
+          acc.push({
+            المعرف: item.معرف_المتجر,
+            اسم_النشاط: item.اسم_المتجر || '',
+            النوع: item.نوع_النشاط || 'أخرى',
+            عنوان: item.عنوان_المتجر || '',
+            مدينة: item.المدينة || 'سبها',
+            هاتف: item.هاتف,
+            مفعّل: true
+          });
+        }
+        return acc;
+      }, []) || [];
+      
+      setStores(uniqueStores);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'حدث خطأ أثناء جلب بيانات المتاجر');
     } finally {
