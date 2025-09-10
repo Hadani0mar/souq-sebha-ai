@@ -27,9 +27,31 @@ export const useWebhook = () => {
         throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
-      const raw = await response.text();
+      let raw = await response.text();
       console.log('Webhook response:', raw); // Debug log
-      
+
+      // بعض المنصات (مثل n8n) قد تُرجع استجابة فارغة مع رابط متابعة في الترويسة
+      if (!raw) {
+        const followUpUrl = response.headers.get('x-webhook-response-url') ||
+          response.headers.get('webhook-response-url') ||
+          response.headers.get('location');
+
+        if (followUpUrl) {
+          // جرّب الاستعلام عن الرابط المُرفق حتى يتم توفر الاستجابة
+          for (let i = 0; i < 10 && !raw; i++) {
+            await new Promise(res => setTimeout(res, 1000));
+            try {
+              const followUpResp = await fetch(followUpUrl);
+              if (followUpResp.ok) {
+                raw = await followUpResp.text();
+              }
+            } catch {
+              // تجاهل أخطاء الاستعلام وواصل المحاولة
+            }
+          }
+        }
+      }
+
       if (!raw) return "تم بدء المعالجة ✅";
 
       // First try to return as-is if it looks like a proper response
